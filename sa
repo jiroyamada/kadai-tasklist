@@ -1,0 +1,148 @@
+[1mdiff --git a/app/controllers/tasks_controller.rb b/app/controllers/tasks_controller.rb[m
+[1mindex a3d7642..13bf7ad 100644[m
+[1m--- a/app/controllers/tasks_controller.rb[m
+[1m+++ b/app/controllers/tasks_controller.rb[m
+[36m@@ -4,7 +4,7 @@[m [mclass TasksController < ApplicationController[m
+   end[m
+ [m
+   def show[m
+[31m-    @task = Task.find(params[:id])[m
+[32m+[m[32m    set_task[m
+   end[m
+ [m
+   def new[m
+[36m@@ -24,11 +24,11 @@[m [mclass TasksController < ApplicationController[m
+   end[m
+ [m
+   def edit[m
+[31m-    @task = Task.find(params[:id])[m
+[32m+[m[32m    set_task[m
+   end[m
+ [m
+   def update[m
+[31m-    @task = Task.find(params[:id])[m
+[32m+[m[32m    set_task[m
+ [m
+     if @task.update(task_params)[m
+       flash[:success] = 'Task は正常に更新されました'[m
+[36m@@ -40,7 +40,7 @@[m [mclass TasksController < ApplicationController[m
+   end[m
+ [m
+   def destroy[m
+[31m-    @task = Task.find(params[:id])[m
+[32m+[m[32m    set_task[m
+     @task.destroy[m
+ [m
+     flash[:success] = 'Task は正常に削除されました'[m
+[36m@@ -48,9 +48,14 @@[m [mclass TasksController < ApplicationController[m
+   end[m
+   [m
+   private[m
+[32m+[m[41m  [m
+[32m+[m[32m  def set_task[m
+[32m+[m[32m    @task = Task.find(params[:id])[m
+[32m+[m[32m  end[m
+[32m+[m
+ [m
+   # Strong Parameter[m
+   def task_params[m
+[31m-    params.require(:task).permit(:content)[m
+[32m+[m[32m    params.require(:task).permit(:content,:status)[m
+   end[m
+ end[m
+[1mdiff --git a/app/models/task.rb b/app/models/task.rb[m
+[1mindex 3c23424..6f22900 100644[m
+[1m--- a/app/models/task.rb[m
+[1m+++ b/app/models/task.rb[m
+[36m@@ -1,2 +1,4 @@[m
+ class Task < ApplicationRecord[m
+[32m+[m[32m  validates :content, presence: true, length: { maximum: 255 }[m
+[32m+[m[32m  validates :status, presence: true, length: { maximum: 10 }[m
+ end[m
+[1mdiff --git a/app/views/tasks/edit.html.erb b/app/views/tasks/edit.html.erb[m
+[1mindex 4a1415f..0928930 100644[m
+[1m--- a/app/views/tasks/edit.html.erb[m
+[1m+++ b/app/views/tasks/edit.html.erb[m
+[36m@@ -1,10 +1,6 @@[m
+ <h1>id: <%= @task.id %> のタスク編集ページ</h1>[m
+ [m
+[31m-<%= form_for(@task) do |f| %>[m
+[31m-  <%= f.label :content, 'メッセージ' %>[m
+[31m-  <%= f.text_field :content %>[m
+[32m+[m[32m<%= render 'form', task: @task %>[m
+ [m
+[31m-  <%= f.submit '投稿' %>[m
+[31m-<% end %>[m
+ [m
+ <%= link_to '一覧に戻る', tasks_path %>[m
+\ No newline at end of file[m
+[1mdiff --git a/app/views/tasks/index.html.erb b/app/views/tasks/index.html.erb[m
+[1mindex 7465289..ff065c5 100644[m
+[1m--- a/app/views/tasks/index.html.erb[m
+[1m+++ b/app/views/tasks/index.html.erb[m
+[36m@@ -2,7 +2,7 @@[m
+ [m
+ <ul>[m
+   <% @tasks.each do |task| %>[m
+[31m-     <li><%= link_to task.id, task %> :<%= task.content %></li>[m
+[32m+[m[32m     <li><%= link_to task.id, task %> : <%= task.status %> &gt;　<%= task.content %></li>[m
+   <% end %>[m
+ </ul>[m
+ <%= link_to '新規タスクの投稿', new_task_path %>[m
+\ No newline at end of file[m
+[1mdiff --git a/app/views/tasks/new.html.erb b/app/views/tasks/new.html.erb[m
+[1mindex e99b878..5de5dd4 100644[m
+[1m--- a/app/views/tasks/new.html.erb[m
+[1m+++ b/app/views/tasks/new.html.erb[m
+[36m@@ -1,10 +1,6 @@[m
+ <h1>作成ページ</h1>[m
+ [m
+[31m-<%= form_for(@task) do |f| %>[m
+[31m-  <%= f.label :content, 'タスク' %>[m
+[31m-  <%= f.text_field :content %>[m
+[32m+[m[32m<%= render 'form', task: @task %>[m
+ [m
+[31m-  <%= f.submit '投稿' %>[m
+[31m-<% end %>[m
+ [m
+ <%= link_to '一覧に戻る', tasks_path %>[m
+\ No newline at end of file[m
+[1mdiff --git a/app/views/tasks/show.html.erb b/app/views/tasks/show.html.erb[m
+[1mindex 27f392e..8d76d84 100644[m
+[1m--- a/app/views/tasks/show.html.erb[m
+[1m+++ b/app/views/tasks/show.html.erb[m
+[36m@@ -1,7 +1,8 @@[m
+[31m-<h1>id: <%= @task.id %> 詳細ページ</h1>[m
+[32m+[m[32m<h1>id: <%= @task.id %> の詳細ページ</h1>[m
+ [m
+[31m-<p><%= @task.content %></p>[m
+[32m+[m[32m<p>ステータス: <%= @task.status %></p>[m
+[32m+[m[32m<p>タスク： <%= @task.content %></p>[m
+ [m
+[31m-<%= link_to '一覧に戻る', task_path %>[m
+[31m-<%= link_to 'タスクを編集する', edit_task_path(@task) %>[m
+[31m-<%= link_to 'このタスクをを削除する', @message, method: :delete, data: { confirm: '本当に削除してよろしいですか？' } %>[m
+\ No newline at end of file[m
+[32m+[m[32m<%= link_to '一覧に戻る', tasks_path %>[m
+[32m+[m[32m<%= link_to 'このタスクを編集する', edit_task_path(@task) %>[m
+[32m+[m[32m<%= link_to 'このタスクを削除する', @task, method: :delete, data: { confirm: '本当に削除してよろしいですか？' } %>[m
+\ No newline at end of file[m
+[1mdiff --git a/db/schema.rb b/db/schema.rb[m
+[1mindex 2bd07d6..e9a6188 100644[m
+[1m--- a/db/schema.rb[m
+[1m+++ b/db/schema.rb[m
+[36m@@ -10,12 +10,13 @@[m
+ #[m
+ # It's strongly recommended that you check this file into your version control system.[m
+ [m
+[31m-ActiveRecord::Schema.define(version: 20180807213749) do[m
+[32m+[m[32mActiveRecord::Schema.define(version: 20180809044954) do[m
+ [m
+   create_table "tasks", force: :cascade, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8" do |t|[m
+     t.string   "content"[m
+     t.datetime "created_at", null: false[m
+     t.datetime "updated_at", null: false[m
+[32m+[m[32m    t.string   "status"[m
+   end[m
+ [m
+ end[m
